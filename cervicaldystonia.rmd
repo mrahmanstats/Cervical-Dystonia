@@ -1,0 +1,107 @@
+---
+title: "Cervical Dystonia"
+author: "Mohammed Rahman"
+date: "February 8, 2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r loading libraries, message=FALSE, warning=FALSE, paged.print=FALSE}
+library(haven)
+library(data.table)
+library(tidyverse)
+library(skimr)
+library(gridExtra)
+library(gtsummary)
+library(expss)
+```
+
+```{r loading in data}
+cerv <- read_dta("cdystonia.dta")
+
+glimpse(cerv)
+
+head(cerv)
+
+cerv_dyst <- cerv %>%
+             mutate(id = paste0(site, id)) %>%
+             select(-site)
+
+glimpse(cerv_dyst)
+
+cerv_dyst <- cerv_dyst %>%
+             mutate(treat = as.numeric(treat),sex = as.numeric(sex)) %>%
+             apply_labels(treat = "Treatment", sex = "Sex")
+```
+
+# Exploratory Analysis
+```{r}
+theme_set(theme_classic())
+table_cerv <- cerv_dyst %>% mutate(sex = if_else(sex == 1, "Female", "Male"),
+                                   treat = if_else(treat == 1,
+                                                   "10000U",
+                                                   if_else(treat == 2,
+                                                           "5000U",
+                                                           "Placebo")),
+                                   week = paste0("Week ",week),
+                                   week = factor(week, levels = c("Week 0",
+                                                                  "Week 2",
+                                                                  "Week 4",
+                                                                  "Week 8",
+                                                                  "Week 12",
+                                                                  "Week 16")))
+table_cerv %>%
+  select(-id, -week, -treat) %>%
+  as.data.frame() %>%
+  tbl_summary(by = sex) %>%
+  add_p() %>% 
+  bold_p()
+
+table_cerv %>%
+  select(-id, -sex, -treat, -age) %>%
+  as.data.frame() %>%
+  tbl_summary(by = week) %>%
+  add_p() %>% 
+  bold_p()
+
+table_cerv %>%
+  select(-id, -sex, -week, -age) %>%
+  as.data.frame() %>%
+  tbl_summary(by = treat) %>%
+  add_p() %>% 
+  bold_p()
+
+age_hist <- ggplot(data = cerv_dyst, aes(x = age)) +
+            geom_histogram(col = "white", fill = "seagreen3")
+
+twstrs_hist <- ggplot(data = cerv_dyst, aes(x = twstrs)) +
+               geom_histogram(col = "white", fill = "seagreen3") +
+               labs(x = "Toronto Western Spasmodic Torticollis Rating Scale (TWSTRS)")
+
+ggplot(data = cerv_dyst, aes(x = age, y = twstrs)) + geom_point() + facet_wrap(~id) + geom_abline()
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
