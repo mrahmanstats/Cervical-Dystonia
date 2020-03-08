@@ -6,6 +6,11 @@ output:
   pdf_document: default
   html_document: default
 ---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(comment = NA)
+```
+
 ```{r loading libraries, message=FALSE, warning=FALSE, paged.print=FALSE}
 #Loading Libraries
 library(haven)
@@ -15,6 +20,7 @@ library(skimr)
 library(gridExtra)
 library(gtsummary)
 library(expss)
+library(lme4)
 ```
 
 ```{r loading in data}
@@ -30,11 +36,9 @@ cerv_dyst <- cerv %>%
              mutate(id = paste0(site, id)) %>%
              select(-site)
 
-glimpse(cerv_dyst)
-
 #Mutating the sex variable to numeric, Female = 1
 cerv_dyst <- cerv_dyst %>%
-             mutate(sex = as.numeric(sex)) %>%
+             mutate(treat = as.factor(treat), sex = as.numeric(sex)) %>%
              apply_labels(treat = "Treatment", sex = "Sex")
 ```
 
@@ -109,11 +113,44 @@ ggplot(data = cerv_dyst, aes(x = week, y = twstrs)) +
   
 ```
 
-```{r}
+```{r message=FALSE}
+fit_1 <- lmer(data = cerv_dyst, 
+             twstrs ~ week + age + sex + treat +
+             (1|id), REML = F)
+fit_2 <- lmer(data = cerv_dyst, 
+             twstrs ~ week + age + sex + treat +
+             (week|id), REML = F)
+fit_3 <- lmer(data = cerv_dyst, 
+             twstrs ~ week + age + sex + treat +
+             (0+week|id), REML = F)
 
+anova(fit_2, fit_3, fit_1)
+
+summary(fit_1)
 ```
 
 ```{r}
+
+fit_4 <- lmer(data = cerv_dyst, 
+             twstrs ~ week + age + sex + treat + week*age + week*treat +
+             (week|id), REML = F)
+fit_5 <- lmer(data = cerv_dyst, 
+             twstrs ~ week + age + sex + treat + week*age + week*treat +
+             (0+week|id), REML = F)
+fit_6 <- lmer(data = cerv_dyst, 
+             twstrs ~ week + age + sex + treat + week*age + week*treat +
+             (1|id), REML = F)
+
+anova(fit_4, fit_5, fit_6)
+
+summary(fit_6)
+```
+
+```{r}
+par(mfrow=c(2,1))
+a <- plot(fit_6)
+b <- lattice::qqmath(fit_6)
+gridExtra::grid.arrange(a,b, heights = 10)
 
 ```
 
